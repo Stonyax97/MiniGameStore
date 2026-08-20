@@ -65,54 +65,68 @@ while True:
     print("5-Clear library")
     print("6-Exit")
     
-    choice=int(input("Choose an option: "))
+    try:
+        choice=int(input("Choose an option: "))
     
-    if choice == 1:
-        for banana in range(6):
-            info(banana)
-        procced()
+        if choice == 1:
+            for banana in range(6):
+                info(banana)
+            procced()
     
-    elif choice == 2:
-        cgtb=int(input("Enter the ID of the desired game to purchase: "))
-        if cgtb <= 5:
-            buygame=str(input(f"Purchase {games[cgtb]["Name"]} for {games[cgtb]["Price"]}?(Y/N)")).lower()
-            if buygame == "y":
-                print(f"Purchasing {games[cgtb]["Name"]}...")
-                if games[cgtb]["Price"]=="FREE":
-                    moneyspent=moneyspent+0
+        elif choice == 2:
+            try:
+                cgtb=int(input("Enter the ID of the desired game to purchase: "))
+                if cgtb <= 5:
+                    buygame=str(input(f"Purchase {games[cgtb]["Name"]} for {games[cgtb]["Price"]}?(Y/N) ")).lower()
+                    if buygame == "y":
+                        print(f"Purchasing {games[cgtb]["Name"]}...")
+                        if games[cgtb]["Price"]=="FREE":
+                            moneyspent=moneyspent+0
+                        else:
+                            moneyspent=moneyspent+float(games[cgtb]["Price"].replace("$", " "))
+                            time.sleep(0.5)
+                            games[cgtb]["Owned"]=True
+                            library.append(games[cgtb]["Name"])
+                            print(f"{games[cgtb]["Name"]} Purchased succesfully and Added to library")
+                            time.sleep(1.5)
+                    else:
+                        print(f"Purchase of {games[cgtb]["Name"]} has been cancelled")
+                        time.sleep(1)
                 else:
-                    moneyspent=moneyspent+float(games[cgtb]["Price"].replace("$", " "))
-                time.sleep(0.5)
-                games[cgtb]["Owned"]=True
-                library.append(games[cgtb]["Name"])
-                print(f"{games[cgtb]["Name"]} Purchased succesfully and Added to library")
+                    print("Error: Choose a valid game ID")
+                    time.sleep(1.3)
+            except ValueError:
+                print("Error: Choose a valid game ID")
+                time.sleep(1.3)
+            
+        elif choice == 3:
+            print(f"${moneyspent:.2f}")
+            procced()
+          
+        elif choice == 4:
+            if library==[]:
+                print("         Empty         ")
+                procced()
+            else:
+                print(library)
+                procced()
+        
+        elif choice == 5:
+            if library==[]:
+                print("Library is already empty")
                 time.sleep(1.5)
             else:
-                print(f"Purchase of {games[cgtb]["Name"]} has been cancelled")
-                time.sleep(1)
-                
-        else:
-            print("Error: Choose a valid game ID")
-            time.sleep(1.3)
-            
-    elif choice == 3:
-        print(f"${moneyspent:.2f}")
-        procced()
-          
-    elif choice == 4:
-        if library==[]:
-            print("         Empty         ")
-            procced()
-        else:
-            print(library)
-            procced()
+                library.clear()
+                print("Library cleared succesfully!")
+                time.sleep(1.5)
         
-    elif choice == 5:
-        library.clear()
-        
-    elif choice ==6:
-        break
+        elif choice ==6:
+            break
     
-    else:
+        else:
+            print("Error: Choose a valid option")
+            time.sleep(1.5)
+            
+    except ValueError:
         print("Error: Choose a valid option")
-        time.sleep(1.2)
+        time.sleep(1.5)
