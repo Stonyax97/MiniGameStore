@@ -8,12 +8,15 @@
 #1.3.1 Changelogs: Fixed a bug where the user would be allowed to purchase the game for countless times. Added saving library. Added clearing the save. Improved clearing library (added a pause). Improved some code. Added excepted behavior when clearing an empty save. Fixed a bug where purchasing a free game would not have a pause. Added loading of owned games from save file.
 #1.3.2 Changeloges: Added loading library. Fixed a bug where clearing the library won't clear the save. Added saving and loading money spent.
 #v1.4: Various code improvements for easier reading and unified some values. Removed .txt file saving. Added json file saving and loading. Added guidlines for each part for ease of readablity. Added auto saving. Added moneyspent clearing. Added clearing save. Fixed a bug where clearing the library and buying the games that were cleared would not be allowed as the systeme still thinks the games are owned.
+#V1.4 split version: splitting the projecti into 2 (for fun :)).... After further inspection it feels like im gonna acc split it for real. Split the project into 2 parts. one with the games library and one with all the code and changelogs. made the alias of time as t for easier typing (too lazy to add 3 caracters)
+#V1.4.1 = V1.4 split version.
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-import time
+import time as t
 import msvcrt
 import json
+from games import games
 
 #VARIABLES ------------------------------------------------------------
 library=[]
@@ -22,85 +25,6 @@ file_path="C:\\Users\\Ziyad\\Desktop\\save.json" #absolute file path
 default_data={"library":[], "moneyspent":0} #structure of the json file
 #----------------------------------------------------------------------
 
-games = [
-    {
-        "Name": "Minecraft",
-        "Price": "29.99$",
-        "Genre": "Adventure",
-        "Owned": False,
-        "ID": 0
-    },
-    {
-        "Name" : "Grand Theft Auto V",
-        "Price" : "59.99$",
-        "Genre" : "Action-Adventure",
-        "Owned" : False,
-        "minfo" : "Contains in app-purchases",
-        "ID" : 1
-    },
-    {
-        "Name": "FIFA",
-        "Price": "59.99$",
-        "Genre": "Sports",
-        "Owned": False,
-        "minfo" : "Contains in app-purchases",
-        "ID": 2
-    },
-    {
-        "Name" : "Tetris",
-        "Price" : "1.99$",
-        "Genre" : "Retro",
-        "Owned" : False,
-        "ID" : 3
-    },
-    {
-        "Name" : "Roblox",
-        "Price" : "FREE",
-        "Genre" : "Lobby-Game",
-        "Owned" : False,
-        "minfo" : "Contains in app-purchases",
-        "ID" : 4
-    },
-    {
-        "Name" : "Geometry dash",
-        "Price" : "4.99$",
-        "Genre" : "Action-Platformer",
-        "Owned" : False,
-        "minfo" : "Contains in app-purchases",
-        "ID" : 5
-    },
-    {
-        "Name" : "Among Us",
-        "Price" : "0.99$",
-        "Genre" : "Social-Deduction, Party",
-        "Owned" : False,
-        "minfo" : "Contains in app-purchases",
-        "ID" : 6
-    },
-    {
-        "Name" : "Snake",
-        "Price" : "FREE",
-        "Genre" : "Classic",
-        "Owned" : False,
-        "ID" : 7
-    },
-    {
-        "Name" : "eFootball",
-        "Price" : "FREE",
-        "Genre" : "Sports",
-        "Owned" : False,
-        "minfo" : "Contains in app-purchases",
-        "ID" : 8
-    },
-    {
-        "Name" : "Fortnite",
-        "Price" : "FREE",
-        "Genre" : "3D-Shooter, Battle", 
-        "Owned" : False,
-        "minfo" : "Contains in app-purchases",
-        "ID" : 9
-    }
-]
 
 #FILE READING -------------------------------------------------
 
@@ -178,26 +102,26 @@ def buy_game():
                 if buygame == "y":
                     print(f"Purchasing {games[cgtb]["Name"]}...")
                     if games[cgtb]["Price"]=="FREE":
-                        time.sleep(0.5)
+                        t.sleep(0.5)
                     else:
                         moneyspent=moneyspent+float(games[cgtb]["Price"].replace("$", " "))
-                        time.sleep(0.5)
+                        t.sleep(0.5)
                     games[cgtb]["Owned"]=True
                     library.append(games[cgtb]["Name"])
                     print(f"{games[cgtb]["Name"]} Purchased succesfully and Added to library")
-                    time.sleep(1.5)
+                    t.sleep(1.5)
                 else:
                     print(f"Purchase of {games[cgtb]["Name"]} has been cancelled")
-                    time.sleep(1)
+                    t.sleep(1)
             else:
                 print("This game has already been purchased")
-                time.sleep(1.5)
+                t.sleep(1.5)
         else:
             print("Error: Choose a valid game ID")
-            time.sleep(1.3)
+            t.sleep(1.3)
     except ValueError:
         print("Error: Choose a valid game ID")
-        time.sleep(1.3)
+        t.sleep(1.3)
 
 #----------------------------------------------------------------------------------------------------------------------
 
@@ -219,7 +143,7 @@ while True:
         if choice == 1:
             for banana in range(len(games)):
                 info(banana)
-                time.sleep(0.2)
+                t.sleep(0.2)
             procced()
     
         elif choice == 2:
@@ -240,7 +164,7 @@ while True:
         elif choice == 5:
             if library==[]:
                 print("Library is already empty")
-                time.sleep(1.5)
+                t.sleep(1.5)
             else:
                 print("Clear library? (y/N): ")
                 yn=msvcrt.getch().decode().lower()
@@ -248,7 +172,7 @@ while True:
                     clear_ownedvalue()
                     library.clear()
                     print("Library cleared succesfully!")
-                    time.sleep(0.8)
+                    t.sleep(0.8)
                     print("Clear moneyspent too? (y/N) ")
                     yn=msvcrt.getch().decode().lower()
                     if yn=="y":
@@ -256,10 +180,10 @@ while True:
                         print("Moneyspent cleared succesfully!")
                     else:
                         print("*Clearing moneyspent ignored*")
-                    time.sleep(1.5)
+                    t.sleep(1.5)
                 else:
                     print("Clearing library cancelled")
-                    time.sleep(1.5)
+                    t.sleep(1.5)
         
         elif choice == 6:
             with open(file_path, "r") as file:
@@ -267,7 +191,7 @@ while True:
                 print(checkdata)
                 if checkdata==default_data:
                     print("Save is already empty")
-                    time.sleep(1.5)
+                    t.sleep(1.5)
                 else:
                     print("Clear save? (y/N): ")
                     yn=msvcrt.getch().decode().lower()
@@ -278,20 +202,20 @@ while True:
                         with open(file_path, "w") as f1:
                             json.dump(default_data, f1, indent=4)
                         print("Cleared save succesfully!")
-                        time.sleep(1.5)
+                        t.sleep(1.5)
                     else:
                         print("Clearing save cancelled")
-                        time.sleep(1.5)
+                        t.sleep(1.5)
 
         elif choice == 7:
             break
   
         else:
             print("Error: Choose a valid option")
-            time.sleep(1.5)
+            t.sleep(1.5)
             
     except ValueError:
         print("Error: Choose a valid option")
-        time.sleep(1.5)
+        t.sleep(1.5)
 
     save()
