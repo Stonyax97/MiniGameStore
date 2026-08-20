@@ -1,8 +1,10 @@
 #v1.1 Change Logs: Added error handling and user indication when clearing library
 #v1.2 Change Logs: Expanded game library, added versitality for expanding the game library (len(games)), Added Purchase confirmation when buying a free game. Fixed a bug where the library was not being updated when buying a free game.
 #V1.2.1 (same release): Fixed bug were free games do not get "owned".
+#v1.3 Change logs: Added more information about games. Added msvcrt for user-friendliness. Added confirmation when clearing library. Added brief pause before showing the next game.
 
 import time
+import msvcrt
 
 games = [
     {
@@ -17,6 +19,7 @@ games = [
         "Price" : "59.99$",
         "Genre" : "Action-Adventure",
         "Owned" : False,
+        "minfo" : "Contains in app-purchases",
         "ID" : 1
     },
     {
@@ -24,6 +27,7 @@ games = [
         "Price": "59.99$",
         "Genre": "Sports",
         "Owned": False,
+        "minfo" : "Contains in app-purchases",
         "ID": 2
     },
     {
@@ -38,6 +42,7 @@ games = [
         "Price" : "FREE",
         "Genre" : "Lobby-Game",
         "Owned" : False,
+        "minfo" : "Contains in app-purchases",
         "ID" : 4
     },
     {
@@ -45,6 +50,7 @@ games = [
         "Price" : "4.99$",
         "Genre" : "Action-Platformer",
         "Owned" : False,
+        "minfo" : "Contains in app-purchases",
         "ID" : 5
     },
     {
@@ -52,6 +58,7 @@ games = [
         "Price" : "0.99$",
         "Genre" : "Social-Deduction, Party",
         "Owned" : False,
+        "minfo" : "Contains in app-purchases",
         "ID" : 6
     },
     {
@@ -66,6 +73,7 @@ games = [
         "Price" : "FREE",
         "Genre" : "Sports",
         "Owned" : False,
+        "minfo" : "Contains in app-purchases",
         "ID" : 8
     },
     {
@@ -73,18 +81,27 @@ games = [
         "Price" : "FREE",
         "Genre" : "3D-Shooter, Battle", 
         "Owned" : False,
+        "minfo" : "Contains in app-purchases",
         "ID" : 9
     }
 ]
 
 def info(gid):
-    if games[gid]["Owned"] == False :
-        print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Not Owned\n ID: {games[gid]["ID"]}")
+    if "minfo" in games[gid]:
+        if games[gid]["Owned"] == False :
+            print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Not Owned\n ID: {games[gid]["ID"]}\n *{games[gid]["minfo"]}*")
+        else:
+            print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Bought\n ID: {games[gid]["ID"]}\n *{games[gid]["minfo"]}*")
     else:
-        print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Bought\n ID: {games[gid]["ID"]}")
+        if games[gid]["Owned"] == False :
+            print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Not Owned\n ID: {games[gid]["ID"]}")
+        else:
+            print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Bought\n ID: {games[gid]["ID"]}")
+
 
 def procced():
-    input("Go back to main menu? ")
+    print("Press any key to go back to main menu...")
+    msvcrt.getch()
 
 library=[]
 moneyspent=0
@@ -103,13 +120,15 @@ while True:
         if choice == 1:
             for banana in range(len(games)):
                 info(banana)
+                time.sleep(0.2)
             procced()
     
         elif choice == 2:
             try:
                 cgtb=int(input("Enter the ID of the desired game to purchase: "))
                 if cgtb < len(games):
-                    buygame=str(input(f"Purchase {games[cgtb]["Name"]} for {games[cgtb]["Price"]}?(Y/N) ")).lower()
+                    print(f"Purchase {games[cgtb]["Name"]} for {games[cgtb]["Price"]}?(y/N) ")
+                    buygame=msvcrt.getch().decode().lower()
                     if buygame == "y":
                         print(f"Purchasing {games[cgtb]["Name"]}...")
                         if games[cgtb]["Price"]=="FREE":
@@ -148,9 +167,14 @@ while True:
                 print("Library is already empty")
                 time.sleep(1.5)
             else:
-                library.clear()
-                print("Library cleared succesfully!")
-                time.sleep(1.5)
+                print("Clear library? (y/N)")
+                yn=msvcrt.getch().decode().lower()
+                if yn=="y":
+                    library.clear()
+                    print("Library cleared succesfully!")
+                    time.sleep(1.5)
+                else:
+                    print("Clearing library cancelled")
         
         elif choice ==6:
             break
