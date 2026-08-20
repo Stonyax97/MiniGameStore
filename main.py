@@ -4,12 +4,31 @@
 #v1.3 Change logs: Added more information about games. Added msvcrt for user-friendliness. Added confirmation when clearing library. Added brief pause before showing the next game (later to be toggled on or off in settings)
 #WHAT TO DO NEXT: Buy game in show games menu. save info. new settings page for toggling time pause (very useless but ehh)
 #1.3.1 Changelogs: Fixed a bug where the user would be allowed to purchase the game for countless times. Added saving library. Added clearing the save. Improved clearing library (added a pause). Improved some code. Added excepted behavior when clearing an empty save. Fixed a bug where purchasing a free game would not have a pause. Added loading of owned games from save file.
+#1.3.2 Changeloges: Added loading library. Fixed a bug where clearing the library won't clear the save. Added saving and loading money spent.
 
 import time
 import msvcrt
 
+#CREATING/READING FILES ---------------------------------------------------------------
+
 with open("save.txt", "a") as h:
     pass
+
+with open("money.txt", "a") as file:
+    pass
+
+with open("money.txt", "r") as file2:
+    whatsinside2=file2.readline()
+    if whatsinside2=="":
+        with open("money.txt", "w") as file3:
+            file3.write("0")
+    else:
+        pass
+
+with open("money.txt", "r") as file:
+    moneyspent=float(file.readline())
+
+#CREATING/READING FILES ---------------------------------------------------------------
 
 games = [
     {
@@ -108,8 +127,11 @@ def procced():
     print("Press any key to go back to main menu ")
     msvcrt.getch()
 
+#VARIABLES/LISTS -------------------------------------------------------------------
+
 library=[]
-moneyspent=0
+
+#VARIABLES/LISTS -------------------------------------------------------------------
 
 def buy_game():
     global moneyspent
@@ -143,22 +165,34 @@ def buy_game():
         print("Error: Choose a valid game ID")
         time.sleep(1.3)
 
+#FILE SAVING/READING -------------------------------------------------
+
 def save():
     with open("save.txt", "a") as a:
         for n in range(len(library)):
             a.write(library[n]+"\n")
 
+def savemoney():
+    with open("money.txt", "w") as file:
+        file.write(str(moneyspent))  #WORKS
 
 with open("save.txt", "r") as file:
     length=file.readlines()
     file.seek(0)
     for p in range(len(length)):
-        game1=file.readline()
+        game=file.readline()
         for q in range(len(games)):
-            if game1.strip()==games[q]["Name"]:
+            if game.strip()==games[q]["Name"]:
                 games[q]["Owned"]=True
             else:
                 pass
+
+with open("save.txt", "r") as load:
+    library=load.readlines()
+for i in range(len(library)):
+    library[i]=library[i].strip()
+
+#FILE SAVING/READING -------------------------------------------------
 
 while True:
     print("1-Show Games")
@@ -199,10 +233,12 @@ while True:
                 print("Library is already empty")
                 time.sleep(1.5)
             else:
-                print("Clear library? (y/N)")
+                print("Clear library? (y/N): ")
                 yn=msvcrt.getch().decode().lower()
                 if yn=="y":
                     library.clear()
+                    with open("save.txt", "w") as file:
+                        file.write("")
                     print("Library cleared succesfully!")
                     time.sleep(1.5)
                 else:
@@ -214,6 +250,7 @@ while True:
             savingchoice=input("Procced to save? (y/N): ").lower()
             if savingchoice=="y":
                 save()
+                savemoney()
                 print("Library has been succesfully saved")
                 time.sleep(1.5)
             else:
@@ -231,6 +268,7 @@ while True:
                 if clearchoice=="y":
                     print("Clearing save...")
                     time.sleep(0.4)
+                    library=[]
                     with open ("save.txt", "w") as clearfile:
                         clearfile.write("")
                     print(f"Cleared {len(library)} games succesfully")
