@@ -1,3 +1,7 @@
+#v1.1 Change Logs: Added error handling and user indication when clearing library
+#v1.2 Change Logs: Expanded game library, added versitality for expanding the game library (len(games)), Added Purchase confirmation when buying a free game. Fixed a bug where the library was not being updated when buying a free game.
+#V1.2.1 (same release): Fixed bug were free games do not get "owned".
+
 import time
 
 games = [
@@ -42,6 +46,34 @@ games = [
         "Genre" : "Action-Platformer",
         "Owned" : False,
         "ID" : 5
+    },
+    {
+        "Name" : "Among Us",
+        "Price" : "0.99$",
+        "Genre" : "Social-Deduction, Party",
+        "Owned" : False,
+        "ID" : 6
+    },
+    {
+        "Name" : "Snake",
+        "Price" : "FREE",
+        "Genre" : "Classic",
+        "Owned" : False,
+        "ID" : 7
+    },
+    {
+        "Name" : "eFootball",
+        "Price" : "FREE",
+        "Genre" : "Sports",
+        "Owned" : False,
+        "ID" : 8
+    },
+    {
+        "Name" : "Fortnite",
+        "Price" : "FREE",
+        "Genre" : "3D-Shooter, Battle", 
+        "Owned" : False,
+        "ID" : 9
     }
 ]
 
@@ -69,14 +101,14 @@ while True:
         choice=int(input("Choose an option: "))
     
         if choice == 1:
-            for banana in range(6):
+            for banana in range(len(games)):
                 info(banana)
             procced()
     
         elif choice == 2:
             try:
                 cgtb=int(input("Enter the ID of the desired game to purchase: "))
-                if cgtb <= 5:
+                if cgtb < len(games):
                     buygame=str(input(f"Purchase {games[cgtb]["Name"]} for {games[cgtb]["Price"]}?(Y/N) ")).lower()
                     if buygame == "y":
                         print(f"Purchasing {games[cgtb]["Name"]}...")
@@ -85,10 +117,10 @@ while True:
                         else:
                             moneyspent=moneyspent+float(games[cgtb]["Price"].replace("$", " "))
                             time.sleep(0.5)
-                            games[cgtb]["Owned"]=True
-                            library.append(games[cgtb]["Name"])
-                            print(f"{games[cgtb]["Name"]} Purchased succesfully and Added to library")
-                            time.sleep(1.5)
+                        games[cgtb]["Owned"]=True
+                        library.append(games[cgtb]["Name"])
+                        print(f"{games[cgtb]["Name"]} Purchased succesfully and Added to library")
+                        time.sleep(1.5)
                     else:
                         print(f"Purchase of {games[cgtb]["Name"]} has been cancelled")
                         time.sleep(1)
