@@ -1,3 +1,5 @@
+#CHANGE LOGS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #v1.1 Change Logs: Added error handling and user indication when clearing library
 #v1.2 Change Logs: Expanded game library, added versitality for expanding the game library (len(games)), Added Purchase confirmation when buying a free game. Fixed a bug where the library was not being updated when buying a free game.
 #V1.2.1 (same release): Fixed bug were free games do not get "owned".
@@ -5,30 +7,20 @@
 #WHAT TO DO NEXT: Buy game in show games menu. save info. new settings page for toggling time pause (very useless but ehh)
 #1.3.1 Changelogs: Fixed a bug where the user would be allowed to purchase the game for countless times. Added saving library. Added clearing the save. Improved clearing library (added a pause). Improved some code. Added excepted behavior when clearing an empty save. Fixed a bug where purchasing a free game would not have a pause. Added loading of owned games from save file.
 #1.3.2 Changeloges: Added loading library. Fixed a bug where clearing the library won't clear the save. Added saving and loading money spent.
+#v1.4: Various code improvements for easier reading and unified some values. Removed .txt file saving. Added json file saving and loading. Added guidlines for each part for ease of readablity. Added auto saving. Added moneyspent clearing. Added clearing save. Fixed a bug where clearing the library and buying the games that were cleared would not be allowed as the systeme still thinks the games are owned.
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 import time
 import msvcrt
+import json
 
-#CREATING/READING FILES ---------------------------------------------------------------
-
-with open("save.txt", "a") as h:
-    pass
-
-with open("money.txt", "a") as file:
-    pass
-
-with open("money.txt", "r") as file2:
-    whatsinside2=file2.readline()
-    if whatsinside2=="":
-        with open("money.txt", "w") as file3:
-            file3.write("0")
-    else:
-        pass
-
-with open("money.txt", "r") as file:
-    moneyspent=float(file.readline())
-
-#CREATING/READING FILES ---------------------------------------------------------------
+#VARIABLES ------------------------------------------------------------
+library=[]
+moneyspent=0
+file_path="C:\\Users\\Ziyad\\Desktop\\save.json" #absolute file path
+default_data={"library":[], "moneyspent":0} #structure of the json file
+#----------------------------------------------------------------------
 
 games = [
     {
@@ -110,6 +102,46 @@ games = [
     }
 ]
 
+#FILE READING -------------------------------------------------
+
+    #CREATING SAVE FILE -------
+with open(file_path, "a") as file:
+    pass
+
+    #CHECK FILE COMPONENTS ------
+with open(file_path, "r") as file:
+    components=file.readline()
+
+    #CREATING FILE STRUCTURE ------
+    if components=="":
+        with open(file_path, "w") as f1:
+            json.dump(default_data, f1, indent=4)
+        
+
+
+    #RUN FILE READING -----------
+with open(file_path, "r") as file:
+
+        #UPDATING LIBRARY AND MONEYSPENT ----------
+    data=json.load(file)
+    library=data["library"]
+    moneyspent=data["moneyspent"]
+
+        #UPDATING GAMES["OWNED"] ---------
+    for i in range(len(data['library'])): 
+        for game in games:
+            if game["Name"]==data["library"][i]: #the current dict's the one being checked
+                game["Owned"]=True
+
+#---------------------------------------------------------------------------
+
+def save(): #FILE SAVING ------
+    data["library"]=library
+    data["moneyspent"]=moneyspent
+    with open(file_path, "w") as file:
+        json.dump(data, file, indent=4)
+
+
 def info(gid):
     if "minfo" in games[gid]:
         if games[gid]["Owned"] == False :
@@ -124,14 +156,16 @@ def info(gid):
 
 
 def procced():
-    print("Press any key to go back to main menu ")
+    print("Press any key to go back to main menu")
     msvcrt.getch()
 
-#VARIABLES/LISTS -------------------------------------------------------------------
+def clear_ownedvalue():
+    for i in range(len(library)):
+        for game in games:
+            if game["Name"]==library[i]:
+                game["Owned"]=False
 
-library=[]
-
-#VARIABLES/LISTS -------------------------------------------------------------------
+#BUYING GAME ----------------------------------------------------------------------------------------------------------
 
 def buy_game():
     global moneyspent
@@ -165,34 +199,10 @@ def buy_game():
         print("Error: Choose a valid game ID")
         time.sleep(1.3)
 
-#FILE SAVING/READING -------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------
 
-def save():
-    with open("save.txt", "a") as a:
-        for n in range(len(library)):
-            a.write(library[n]+"\n")
 
-def savemoney():
-    with open("money.txt", "w") as file:
-        file.write(str(moneyspent))  #WORKS
-
-with open("save.txt", "r") as file:
-    length=file.readlines()
-    file.seek(0)
-    for p in range(len(length)):
-        game=file.readline()
-        for q in range(len(games)):
-            if game.strip()==games[q]["Name"]:
-                games[q]["Owned"]=True
-            else:
-                pass
-
-with open("save.txt", "r") as load:
-    library=load.readlines()
-for i in range(len(library)):
-    library[i]=library[i].strip()
-
-#FILE SAVING/READING -------------------------------------------------
+#MAIN LOOP ------------------------------------------------------------------------------------------------------------
 
 while True:
     print("1-Show Games")
@@ -200,9 +210,8 @@ while True:
     print("3-Show total spent")
     print("4-Show library")
     print("5-Clear library")
-    print("6-Save (ONLY WHEN EXITING)")
-    print("7-Clear save")
-    print("8-Exit")
+    print("6-Clear save")
+    print("7-Exit")
     
     try:
         choice=int(input("Choose an option: "))
@@ -236,50 +245,47 @@ while True:
                 print("Clear library? (y/N): ")
                 yn=msvcrt.getch().decode().lower()
                 if yn=="y":
+                    clear_ownedvalue()
                     library.clear()
-                    with open("save.txt", "w") as file:
-                        file.write("")
                     print("Library cleared succesfully!")
+                    time.sleep(0.8)
+                    print("Clear moneyspent too? (y/N) ")
+                    yn=msvcrt.getch().decode().lower()
+                    if yn=="y":
+                        moneyspent=0
+                        print("Moneyspent cleared succesfully!")
+                    else:
+                        print("*Clearing moneyspent ignored*")
                     time.sleep(1.5)
                 else:
                     print("Clearing library cancelled")
                     time.sleep(1.5)
         
-        elif choice ==6:
-            print("PLEASE ONLY DO THIS AT THE END OF YOUR SESSION\n")
-            savingchoice=input("Procced to save? (y/N): ").lower()
-            if savingchoice=="y":
-                save()
-                savemoney()
-                print("Library has been succesfully saved")
-                time.sleep(1.5)
-            else:
-                print("Saving canceled")
-                time.sleep(1.5)
-
-        elif choice == 7:
-            with open ("save.txt","r") as isfilempty:
-                whatsinside=isfilempty.read()
-            if whatsinside=='':
-                print("Save is already empty")
-                time.sleep(1.5)
-            else:
-                clearchoice=input("Clear save? (y/N): ").lower()
-                if clearchoice=="y":
-                    print("Clearing save...")
-                    time.sleep(0.4)
-                    library=[]
-                    with open ("save.txt", "w") as clearfile:
-                        clearfile.write("")
-                    print(f"Cleared {len(library)} games succesfully")
+        elif choice == 6:
+            with open(file_path, "r") as file:
+                checkdata=json.load(file)
+                print(checkdata)
+                if checkdata==default_data:
+                    print("Save is already empty")
                     time.sleep(1.5)
                 else:
-                    print("Clearing file has been canceled")
-                    time.sleep(1.2)
+                    print("Clear save? (y/N): ")
+                    yn=msvcrt.getch().decode().lower()
+                    if yn=="y":
+                        moneyspent=0
+                        clear_ownedvalue()
+                        library=[]
+                        with open(file_path, "w") as f1:
+                            json.dump(default_data, f1, indent=4)
+                        print("Cleared save succesfully!")
+                        time.sleep(1.5)
+                    else:
+                        print("Clearing save cancelled")
+                        time.sleep(1.5)
 
-        elif choice ==8:
+        elif choice == 7:
             break
-    
+  
         else:
             print("Error: Choose a valid option")
             time.sleep(1.5)
@@ -287,3 +293,5 @@ while True:
     except ValueError:
         print("Error: Choose a valid option")
         time.sleep(1.5)
+
+    save()
