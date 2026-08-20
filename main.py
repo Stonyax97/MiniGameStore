@@ -1,17 +1,18 @@
-#CHANGE LOGS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#CHANGE LOGS ----------------------------------------------------------------------------------------------------------------------------------------------
 
-#v1.1 Change Logs: Added error handling and user indication when clearing library
-#v1.2 Change Logs: Expanded game library, added versitality for expanding the game library (len(games)), Added Purchase confirmation when buying a free game. Fixed a bug where the library was not being updated when buying a free game.
-#V1.2.1 (same release): Fixed bug were free games do not get "owned".
-#v1.3 Change logs: Added more information about games. Added msvcrt for user-friendliness. Added confirmation when clearing library. Added brief pause before showing the next game (later to be toggled on or off in settings)
-#WHAT TO DO NEXT: Buy game in show games menu. new settings page for toggling time pause (very useless but ehh)
-#1.3.1 Changelogs: Fixed a bug where the user would be allowed to purchase the game for countless times. Added saving library. Added clearing the save. Improved clearing library (added a pause). Improved some code. Added excepted behavior when clearing an empty save. Fixed a bug where purchasing a free game would not have a pause. Added loading of owned games from save file.
-#1.3.2 Changeloges: Added loading library. Fixed a bug where clearing the library won't clear the save. Added saving and loading money spent.
-#v1.4: Various code improvements for easier reading and unified some values. Removed .txt file saving. Added json file saving and loading. Added guidlines for each part for ease of readablity. Added auto saving. Added moneyspent clearing. Added clearing save. Fixed a bug where clearing the library and buying the games that were cleared would not be allowed as the systeme still thinks the games are owned.
-#V1.4 split version: splitting the projecti into 2 (for fun :)).... After further inspection it feels like im gonna acc split it for real. Split the project into 2 parts. one with the games library and one with all the code and changelogs. made the alias of time as t for easier typing (too lazy to add 3 caracters)
-#V1.4.1 = V1.4 split version.
-#V1.5: Removed the old input menu for a brand new terminal like experience! Constructing a setting page. Fixed a bug where clearning the library would show the user the save file structure. #SETTINGS DO NOT WORK YET... PLEASE WAIT FOR STABLE 1.5.1
-#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# V1.5.1:
+    #CHANGE LOGS HAVE MATURED!
+#- Replaced the if elif structure for the menu with a smaller one.
+#- Added Settings page.
+#- Settings options get saved to the json save file. If u have any settings suggestions tell report it in issues.
+#- Removed Clear library option (Duplicate of clear save).
+#- Renamed some menu options.
+
+#Developper notes:
+#- The if elif structure in the main menu was so stupid... At first i knew there was an easier approach, but i couldn't get my hands on it.
+#I asked AI for a simpler approach, like... HOW TF DID 7 IF ELIFS GO TO 4 LINES... I understood it and rewrote it here. It's crazy how much these machines are capable of.
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 import time as t
 import msvcrt as m
@@ -23,15 +24,21 @@ import os
 
 library=[]
 moneyspent=0
-file_path="C:\\Users\\Ziyad\\Desktop\\save.json" #absolute file path
-default_data={"library":[], "moneyspent":0, "p_loading":True} #structure of the json file
-
 p_loading=True #Set to true by default
-
 selected=0
 enter=False
 
-options=["Show games", "Buy a game", "Show total spent", "Show library", "Clear library", "Clear save", "Settings", "Exit"]
+    #TEST DATA:
+testonoff=False
+
+    #INFO:
+version="1.5.1"
+
+file_path="C:\\Users\\Ziyad\\Desktop\\save.json" #absolute file path
+
+default_data={"library":[], "moneyspent":0, "p_loading":True} #structure of the json file
+
+main_options=["Games", "Buy a game", "Total spent", "Library", "Settings", "Exit"]
 
 #----------------------------------------------------------------------
 
@@ -50,8 +57,6 @@ with open(file_path, "r") as file:
     if components=="":
         with open(file_path, "w") as f1:
             json.dump(default_data, f1, indent=4)
-        
-
 
     #RUN FILE READING -----------
 with open(file_path, "r") as file:
@@ -61,7 +66,6 @@ with open(file_path, "r") as file:
     library=data["library"]
     moneyspent=data["moneyspent"]
     p_loading=data["p_loading"]
-
 
         #UPDATING GAMES["OWNED"] ---------
     for i in range(len(data['library'])): 
@@ -78,7 +82,6 @@ def save(): #FILE SAVING ------
     with open(file_path, "w") as file:
         json.dump(data, file, indent=4)
 
-
 def info(gid):
     if "minfo" in games[gid]:
         if games[gid]["Owned"] == False :
@@ -91,27 +94,6 @@ def info(gid):
         else:
             print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Bought\n ID: {games[gid]["ID"]}")
 
-def settings():
-    print("----------- SETTINGS -----------")
-    t.sleep(0.5)
-    print(">"+" Game store")
-    print("Coming soon")
-    global selected
-
-    for i in range(10):
-        uk=m.getch()
-        if uk==b'\xe0':
-            key=m.getch()
-            if key==b'H':
-                selected+=1
-            elif key==b'P':
-                selected-=1
-                os.system('cls')
-                print("Game store")
-                print(">"+" Coming soon")
-
-        t.sleep(2)
-
 def clear():
     os.system('cls')
 
@@ -119,11 +101,13 @@ def procced():
     print("Press any key to go back to main menu")
     m.getch()
 
-def clear_ownedvalue():
-    for i in range(len(library)):
-        for game in games:
-            if game["Name"]==library[i]:
-                game["Owned"]=False
+def ONOFF(setting):
+    if setting==True:
+        return "ON"
+    else:
+        return "OFF"
+
+assert ONOFF(testonoff)=="OFF"
 
 #BUYING GAME ----------------------------------------------------------------------------------------------------------
 
@@ -166,56 +150,11 @@ def buy_game():
 
 while True:
     clear()
-    if selected==0:
-        print("> ",options[selected])
-        for i in range(1,8):
-            print(options[i])
-
-    elif selected==1:
-            print(options[0])
-            print("> ",options[selected])
-            for i in range(2,8):
-                print(options[i])
-
-    elif selected==2:
-        for i in range(2):
-            print(options[i])
-        print("> ",options[selected])
-        for i in range (3,8):
-            print(options[i])
-
-    elif selected==3:
-        for i in range(3):
-            print(options[i])
-        print("> ",options[selected])
-        for i in range (4,8):
-            print(options[i])
-
-    elif selected==4:
-        for i in range(4):
-            print(options[i])
-        print("> ",options[selected])
-        for i in range (5,8):
-            print(options[i])
-
-    elif selected==5:
-        for i in range(5):
-            print(options[i])
-        print("> ",options[selected])
-        for i in range (6,8):
-            print(options[i])
-
-    elif selected==6:
-        for i in range(6):
-            print(options[i])
-        print("> ",options[selected])
-        for i in range (7,8):
-            print(options[i])
-
-    elif selected==7:
-        for i in range(7):
-            print(options[i])
-        print("> ",options[selected])
+    for i in range(len(main_options)):
+        if i == selected:
+            print("> ", main_options[i])
+        else:
+            print(" ", main_options[i])
 
     uc=m.getch()
     if uc==b'\r':
@@ -227,14 +166,13 @@ while True:
                 selected-=1
 
         elif key==b'P': #down key
-            if selected<(len(options)-1):
+            if selected<(len(main_options)-1):
                 selected+=1
 
     if enter==True:
         choice=selected
         enter=False
         selected=0
-        pass
     else:
         continue
 
@@ -243,8 +181,6 @@ while True:
             info(banana)
             if p_loading==True:
                 t.sleep(0.2)
-            else:
-                pass
         procced()
 
     elif choice == 1:
@@ -261,59 +197,93 @@ while True:
         else:
             print(library)
             procced()
-    
+
     elif choice == 4:
-        if library==[]:
-            print("Library is already empty")
-            t.sleep(1.5)
-        else:
-            print("Clear library? (y/N): ")
-            yn=m.getch().decode().lower()
-            if yn=="y":
-                clear_ownedvalue()
-                library.clear()
-                print("Library cleared succesfully!")
-                t.sleep(0.8)
-                print("Clear moneyspent too? (y/N) ")
-                yn=m.getch().decode().lower()
-                if yn=="y":
-                    moneyspent=0
-                    print("Moneyspent cleared succesfully!")
+        while True:
+            settings_options = [
+                "Loading Pauses ------------ " + ONOFF(p_loading),
+                "Clear save",
+                "Reset Settings",
+                "Exit",
+                "About"
+            ]
+            clear()
+            print("----------- SETTINGS -----------")
+            for i in range(len(settings_options)):
+                if i==selected:
+                    print(">", settings_options[i])
                 else:
-                    print("*Clearing moneyspent ignored*")
-                t.sleep(1.5)
+                    print(" ", settings_options[i])
+
+            uc=m.getch()
+            if uc==b'\r':
+                enter=True
+            elif uc==b'\xe0':
+                key=m.getch()
+                if key==b'H': #up
+                    if selected>0:
+                        selected-=1
+                elif key==b'P': #down
+                    if selected<(len(settings_options)-1):
+                        selected+=1
+
+            if enter==True:
+                choice=selected
+                enter=False
+                selected=0
             else:
-                print("Clearing library cancelled")
-                t.sleep(1.5)
-    
+                continue
+
+            if choice==0:
+                p_loading=not p_loading
+
+            elif choice==1:
+                with open(file_path, "r") as file:
+                    checkdata=json.load(file)
+                    if checkdata==default_data:
+                        print("Save is already empty")
+                        t.sleep(1.5)
+                    else:
+                        print("Clear save? (y/N): ")
+                        yn=m.getch().decode().lower()
+                        if yn=="y":
+                            moneyspent=0
+                            for i in range(len(library)):
+                                for game in games:
+                                    if game["Name"]==library[i]:
+                                        game["Owned"]=False
+                            library=[]
+                            with open(file_path, "w") as f1:
+                                json.dump(default_data, f1, indent=4)
+                            print("Cleared save succesfully!")
+                            t.sleep(1.5)
+                        else:
+                            print("Clearing save cancelled")
+                            t.sleep(1.5)
+
+            elif choice==2:
+                p_loading=True
+                print("Reset settings succesfully")
+
+            elif choice==3:
+                break
+
+            elif choice==4:
+                clear()
+                print("------------ ABOUT ------------")
+                print("- Version: ",version)
+                print("- Developper: Stonyax97")
+                print("- More: https://github.com/Stonyax97/MiniGameStore")
+                print("\n\n\n- Licensed under no license ;-;\n")
+                print("Press any key to go back to settings")
+                m.getch()
+
+        save()
+            
     elif choice == 5:
-        with open(file_path, "r") as file:
-            checkdata=json.load(file)
-            if checkdata==default_data:
-                print("Save is already empty")
-                t.sleep(1.5)
-            else:
-                print("Clear save? (y/N): ")
-                yn=m.getch().decode().lower()
-                if yn=="y":
-                    moneyspent=0
-                    clear_ownedvalue()
-                    library=[]
-                    with open(file_path, "w") as f1:
-                        json.dump(default_data, f1, indent=4)
-                    print("Cleared save succesfully!")
-                    t.sleep(1.5)
-                else:
-                    print("Clearing save cancelled")
-                    t.sleep(1.5)
-
-    elif choice == 6:
-        settings()
-
-    elif choice == 7:
         break
 
     else:
         raise ValueError
 
-save()
+    save()
