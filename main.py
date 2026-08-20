@@ -1,10 +1,15 @@
 #v1.1 Change Logs: Added error handling and user indication when clearing library
 #v1.2 Change Logs: Expanded game library, added versitality for expanding the game library (len(games)), Added Purchase confirmation when buying a free game. Fixed a bug where the library was not being updated when buying a free game.
 #V1.2.1 (same release): Fixed bug were free games do not get "owned".
-#v1.3 Change logs: Added more information about games. Added msvcrt for user-friendliness. Added confirmation when clearing library. Added brief pause before showing the next game.
+#v1.3 Change logs: Added more information about games. Added msvcrt for user-friendliness. Added confirmation when clearing library. Added brief pause before showing the next game (later to be toggled on or off in settings)
+#WHAT TO DO NEXT: Buy game in show games menu. save info. new settings page for toggling time pause (very useless but ehh)
+#1.3.1 Changelogs: Fixed a bug where the user would be allowed to purchase the game for countless times. Added saving library. Added clearing the save. Improved clearing library (added a pause). Improved some code. Added excepted behavior when clearing an empty save. Fixed a bug where purchasing a free game would not have a pause. Added loading of owned games from save file.
 
 import time
 import msvcrt
+
+with open("save.txt", "a") as h:
+    pass
 
 games = [
     {
@@ -100,19 +105,70 @@ def info(gid):
 
 
 def procced():
-    print("Press any key to go back to main menu...")
+    print("Press any key to go back to main menu ")
     msvcrt.getch()
 
 library=[]
 moneyspent=0
-    
+
+def buy_game():
+    global moneyspent
+    try:
+        cgtb=int(input("Enter the ID of the desired game to purchase: "))
+        if cgtb < len(games):
+            if games[cgtb]["Owned"]==False:
+                print(f"Purchase {games[cgtb]["Name"]} for {games[cgtb]["Price"]}?(y/N) ")
+                buygame=msvcrt.getch().decode().lower()
+                if buygame == "y":
+                    print(f"Purchasing {games[cgtb]["Name"]}...")
+                    if games[cgtb]["Price"]=="FREE":
+                        time.sleep(0.5)
+                    else:
+                        moneyspent=moneyspent+float(games[cgtb]["Price"].replace("$", " "))
+                        time.sleep(0.5)
+                    games[cgtb]["Owned"]=True
+                    library.append(games[cgtb]["Name"])
+                    print(f"{games[cgtb]["Name"]} Purchased succesfully and Added to library")
+                    time.sleep(1.5)
+                else:
+                    print(f"Purchase of {games[cgtb]["Name"]} has been cancelled")
+                    time.sleep(1)
+            else:
+                print("This game has already been purchased")
+                time.sleep(1.5)
+        else:
+            print("Error: Choose a valid game ID")
+            time.sleep(1.3)
+    except ValueError:
+        print("Error: Choose a valid game ID")
+        time.sleep(1.3)
+
+def save():
+    with open("save.txt", "a") as a:
+        for n in range(len(library)):
+            a.write(library[n]+"\n")
+
+
+with open("save.txt", "r") as file:
+    length=file.readlines()
+    file.seek(0)
+    for p in range(len(length)):
+        game1=file.readline()
+        for q in range(len(games)):
+            if game1.strip()==games[q]["Name"]:
+                games[q]["Owned"]=True
+            else:
+                pass
+
 while True:
     print("1-Show Games")
     print("2-Buy a game")
     print("3-Show total spent")
     print("4-Show library")
     print("5-Clear library")
-    print("6-Exit")
+    print("6-Save (ONLY WHEN EXITING)")
+    print("7-Clear save")
+    print("8-Exit")
     
     try:
         choice=int(input("Choose an option: "))
@@ -124,31 +180,7 @@ while True:
             procced()
     
         elif choice == 2:
-            try:
-                cgtb=int(input("Enter the ID of the desired game to purchase: "))
-                if cgtb < len(games):
-                    print(f"Purchase {games[cgtb]["Name"]} for {games[cgtb]["Price"]}?(y/N) ")
-                    buygame=msvcrt.getch().decode().lower()
-                    if buygame == "y":
-                        print(f"Purchasing {games[cgtb]["Name"]}...")
-                        if games[cgtb]["Price"]=="FREE":
-                            moneyspent=moneyspent+0
-                        else:
-                            moneyspent=moneyspent+float(games[cgtb]["Price"].replace("$", " "))
-                            time.sleep(0.5)
-                        games[cgtb]["Owned"]=True
-                        library.append(games[cgtb]["Name"])
-                        print(f"{games[cgtb]["Name"]} Purchased succesfully and Added to library")
-                        time.sleep(1.5)
-                    else:
-                        print(f"Purchase of {games[cgtb]["Name"]} has been cancelled")
-                        time.sleep(1)
-                else:
-                    print("Error: Choose a valid game ID")
-                    time.sleep(1.3)
-            except ValueError:
-                print("Error: Choose a valid game ID")
-                time.sleep(1.3)
+            buy_game()
             
         elif choice == 3:
             print(f"${moneyspent:.2f}")
@@ -156,7 +188,7 @@ while True:
           
         elif choice == 4:
             if library==[]:
-                print("         Empty         ")
+                print("['----------Empty----------']")
                 procced()
             else:
                 print(library)
@@ -175,8 +207,39 @@ while True:
                     time.sleep(1.5)
                 else:
                     print("Clearing library cancelled")
+                    time.sleep(1.5)
         
         elif choice ==6:
+            print("PLEASE ONLY DO THIS AT THE END OF YOUR SESSION\n")
+            savingchoice=input("Procced to save? (y/N): ").lower()
+            if savingchoice=="y":
+                save()
+                print("Library has been succesfully saved")
+                time.sleep(1.5)
+            else:
+                print("Saving canceled")
+                time.sleep(1.5)
+
+        elif choice == 7:
+            with open ("save.txt","r") as isfilempty:
+                whatsinside=isfilempty.read()
+            if whatsinside=='':
+                print("Save is already empty")
+                time.sleep(1.5)
+            else:
+                clearchoice=input("Clear save? (y/N): ").lower()
+                if clearchoice=="y":
+                    print("Clearing save...")
+                    time.sleep(0.4)
+                    with open ("save.txt", "w") as clearfile:
+                        clearfile.write("")
+                    print(f"Cleared {len(library)} games succesfully")
+                    time.sleep(1.5)
+                else:
+                    print("Clearing file has been canceled")
+                    time.sleep(1.2)
+
+        elif choice ==8:
             break
     
         else:
