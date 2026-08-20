@@ -1,16 +1,15 @@
 #CHANGE LOGS ----------------------------------------------------------------------------------------------------------------------------------------------
 
-# V1.5.1:
-    #CHANGE LOGS HAVE MATURED!
-#- Replaced the if elif structure for the menu with a smaller one.
-#- Added Settings page.
-#- Settings options get saved to the json save file. If u have any settings suggestions tell report it in issues.
-#- Removed Clear library option (Duplicate of clear save).
-#- Renamed some menu options.
+# V1.5.2:
 
-#Developper notes:
-#- The if elif structure in the main menu was so stupid... At first i knew there was an easier approach, but i couldn't get my hands on it.
-#I asked AI for a simpler approach, like... HOW TF DID 7 IF ELIFS GO TO 4 LINES... I understood it and rewrote it here. It's crazy how much these machines are capable of.
+#- Running this requires Windows and Python 3.13 or later.
+#- Improved the function buy_game() by using guard clauses.
+#- Fixed a bug where (for other users) the save file would not be created (path not found)
+#- Shortened def info(gid)
+#- Fixed Auto-Saving is settings menu.
+
+#Developer notes:
+#- I want to thank everyone from the r/PythonLearning community. As they gave genuine good advice and support. 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -32,9 +31,9 @@ enter=False
 testonoff=False
 
     #INFO:
-version="1.5.1"
+version="1.5.2"
 
-file_path="C:\\Users\\Ziyad\\Desktop\\save.json" #absolute file path
+file_path=os.path.join(os.path.dirname(__file__), "save.json") #now the fie will be created where this .py file is executed.
 
 default_data={"library":[], "moneyspent":0, "p_loading":True} #structure of the json file
 
@@ -45,23 +44,13 @@ main_options=["Games", "Buy a game", "Total spent", "Library", "Settings", "Exit
 
 #FILE READING -------------------------------------------------
 
-    #CREATING SAVE FILE -------
-with open(file_path, "a") as file:
-    pass
-
-    #CHECK FILE COMPONENTS ------
-with open(file_path, "r") as file:
-    components=file.readline()
-
     #CREATING FILE STRUCTURE ------
-    if components=="":
-        with open(file_path, "w") as f1:
-            json.dump(default_data, f1, indent=4)
+if not os.path.isfile(file_path): #if it doesn't exists
+    with open(file_path, "w") as f1:
+        json.dump(default_data, f1, indent=4)
 
-    #RUN FILE READING -----------
+    #UPDATING VARIABLES AND SETTINGS ----------
 with open(file_path, "r") as file:
-
-        #UPDATING LIBRARY AND MONEYSPENT AND SETTINGS ----------
     data=json.load(file)
     library=data["library"]
     moneyspent=data["moneyspent"]
@@ -83,16 +72,7 @@ def save(): #FILE SAVING ------
         json.dump(data, file, indent=4)
 
 def info(gid):
-    if "minfo" in games[gid]:
-        if games[gid]["Owned"] == False :
-            print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Not Owned\n ID: {games[gid]["ID"]}\n *{games[gid]["minfo"]}*")
-        else:
-            print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Bought\n ID: {games[gid]["ID"]}\n *{games[gid]["minfo"]}*")
-    else:
-        if games[gid]["Owned"] == False :
-            print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Not Owned\n ID: {games[gid]["ID"]}")
-        else:
-            print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: Bought\n ID: {games[gid]["ID"]}")
+    print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: {"Not Owned" if games[gid]["Owned"]==False else "Bought"}\n ID: {games[gid]["ID"]} { f"*{games[gid]["minfo"]}*" if "minfo" in games[gid] else ""}")
 
 def clear():
     os.system('cls')
@@ -113,35 +93,35 @@ assert ONOFF(testonoff)=="OFF"
 
 def buy_game():
     global moneyspent
-    try:
-        cgtb=int(input("Enter the ID of the desired game to purchase: "))
-        if cgtb < len(games):
-            if games[cgtb]["Owned"]==False:
-                print(f"Purchase {games[cgtb]["Name"]} for {games[cgtb]["Price"]}?(y/N) ")
-                buygame=m.getch().decode().lower()
-                if buygame == "y":
-                    print(f"Purchasing {games[cgtb]["Name"]}...")
-                    if games[cgtb]["Price"]=="FREE":
-                        t.sleep(0.5)
-                    else:
-                        moneyspent=moneyspent+float(games[cgtb]["Price"].replace("$", " "))
-                        t.sleep(0.5)
-                    games[cgtb]["Owned"]=True
-                    library.append(games[cgtb]["Name"])
-                    print(f"{games[cgtb]["Name"]} Purchased succesfully and Added to library")
-                    t.sleep(1.5)
-                else:
-                    print(f"Purchase of {games[cgtb]["Name"]} has been cancelled")
-                    t.sleep(1)
-            else:
-                print("This game has already been purchased")
-                t.sleep(1.5)
-        else:
-            print("Error: Choose a valid game ID")
-            t.sleep(1.3)
-    except ValueError:
-        print("Error: Choose a valid game ID")
+    cgtb=int(input("Enter the ID of the desired game to purchase: "))
+    if cgtb >= len(games) or cgtb < 0:
+        print("Choose a valid Game ID")
         t.sleep(1.3)
+        return
+        
+    if games[cgtb]["Owned"]==True:
+        print(f"{games[cgtb]["Name"]} has already been purchased")
+        t.sleep(1.5)
+        return
+
+    else:
+        print(f"Purchase {games[cgtb]["Name"]} for {games[cgtb]["Price"]}?(y/N) ")
+        buygame=m.getch().decode().lower()
+        if buygame != "y":
+            print(f"Purchase of {games[cgtb]["Name"]} has been cancelled")
+            t.sleep(1)
+
+        else:
+            print(f"Purchasing {games[cgtb]["Name"]}...")
+            if games[cgtb]["Price"]=="FREE":
+                t.sleep(0.5)
+            else:
+                moneyspent=moneyspent+float(games[cgtb]["Price"].replace("$", " "))
+                t.sleep(0.5)
+            games[cgtb]["Owned"]=True
+            library.append(games[cgtb]["Name"])
+            print(f"{games[cgtb]["Name"]} Purchased succesfully and Added to library")
+            t.sleep(1.5)
 
 #----------------------------------------------------------------------------------------------------------------------
 
@@ -236,6 +216,7 @@ while True:
 
             if choice==0:
                 p_loading=not p_loading
+                save()
 
             elif choice==1:
                 with open(file_path, "r") as file:
@@ -246,7 +227,10 @@ while True:
                     else:
                         print("Clear save? (y/N): ")
                         yn=m.getch().decode().lower()
-                        if yn=="y":
+                        if yn!="y":
+                            print("Clearing save cancelled")
+                            t.sleep(1.5)
+                        else:
                             moneyspent=0
                             for i in range(len(library)):
                                 for game in games:
@@ -257,13 +241,11 @@ while True:
                                 json.dump(default_data, f1, indent=4)
                             print("Cleared save succesfully!")
                             t.sleep(1.5)
-                        else:
-                            print("Clearing save cancelled")
-                            t.sleep(1.5)
 
             elif choice==2:
                 p_loading=True
                 print("Reset settings succesfully")
+                save()
 
             elif choice==3:
                 break
@@ -274,6 +256,7 @@ while True:
                 print("- Version: ",version)
                 print("- Developper: Stonyax97")
                 print("- More: https://github.com/Stonyax97/MiniGameStore")
+                print("- Requires Windows and Python 3.13 or later. (MacOS coming soon)")
                 print("\n\n\n- Licensed under no license ;-;\n")
                 print("Press any key to go back to settings")
                 m.getch()
