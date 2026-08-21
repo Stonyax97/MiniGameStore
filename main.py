@@ -1,29 +1,32 @@
 #CHANGE LOGS ----------------------------------------------------------------------------------------------------------------------------------------------
 
-# V1.5.2:
+# V1.6:
 
-#- Running this requires Windows and Python 3.13 or later.
-#- Improved the function buy_game() by using guard clauses.
-#- Fixed a bug where (for other users) the save file would not be created (path not found)
-#- Shortened def info(gid)
-#- Fixed Auto-Saving is settings menu.
-
-#Developer notes:
-#- I want to thank everyone from the r/PythonLearning community. As they gave genuine good advice and support. 
+#- WINDOWS ONLY VERSION
+#- Fixed a bug where entering a string in buy a game caushes a crash.
+#- Implemented classes! (For now only data methods coming later).
+#- Added a divider in the store (Can be changed in setttings)
+#- You can now customize loading time in the game menu!
+#- A lot of code improvements here and there!
+#- FOR LATER: ADD BALANCE AND RESTORE PURCHASES!
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-import time as t
 import msvcrt as m
+import time as t
 import json
-from games import games
 import os
+
+from games import Game, games
 
 #VARIABLES ------------------------------------------------------------
 
 library=[]
 moneyspent=0
-p_loading=True #Set to true by default
+wt=1.5 #this is the wait time when getting a text before it goes back to the menu
+loading_time=0.2 #Set to 0.2 by default
+loading=True #Set to true by default
+divider=True #Set to true by default
 selected=0
 enter=False
 
@@ -31,11 +34,11 @@ enter=False
 testonoff=False
 
     #INFO:
-version="1.5.2"
+version="1.6  Windows"
 
 file_path=os.path.join(os.path.dirname(__file__), "save.json") #now the fie will be created where this .py file is executed.
 
-default_data={"library":[], "moneyspent":0, "p_loading":True} #structure of the json file
+default_data={"library":[], "moneyspent":0, "loading":True, "divider":True, "loading_time":loading_time} #structure of the json file
 
 main_options=["Games", "Buy a game", "Total spent", "Library", "Settings", "Exit"]
 
@@ -45,7 +48,7 @@ main_options=["Games", "Buy a game", "Total spent", "Library", "Settings", "Exit
 #FILE READING -------------------------------------------------
 
     #CREATING FILE STRUCTURE ------
-if not os.path.isfile(file_path): #if it doesn't exists
+if not os.path.isfile(file_path): #if it doesn't exist
     with open(file_path, "w") as f1:
         json.dump(default_data, f1, indent=4)
 
@@ -54,31 +57,35 @@ with open(file_path, "r") as file:
     data=json.load(file)
     library=data["library"]
     moneyspent=data["moneyspent"]
-    p_loading=data["p_loading"]
+    loading=data["loading"]
+    divider=data["divider"]
+    loading_time=data["loading_time"]
 
-        #UPDATING GAMES["OWNED"] ---------
+        #UPDATING GAMES.OWNED ---------
     for i in range(len(data['library'])): 
         for game in games:
-            if game["Name"]==data["library"][i]: #the current dict's the one being checked
-                game["Owned"]=True
+            if game.name==data["library"][i]:
+                game.owned=True
 
 #FUNCTIONS------------------------------------------------------------------
 
 def save(): #FILE SAVING ------
     data["library"]=library
     data["moneyspent"]=moneyspent
-    data["p_loading"]=p_loading
+    data["loading"]=loading
+    data["divider"]=divider
+    data["loading_time"]=loading_time
     with open(file_path, "w") as file:
         json.dump(data, file, indent=4)
 
 def info(gid):
-    print(f"> {games[gid]["Name"]}\n Price: {games[gid]["Price"]}\n Genre: {games[gid]["Genre"]}\n Owned: {"Not Owned" if games[gid]["Owned"]==False else "Bought"}\n ID: {games[gid]["ID"]} { f"*{games[gid]["minfo"]}*" if "minfo" in games[gid] else ""}")
+    print(f"{"\n" if divider==False else "-"*40}\n> {games[gid].name}\n Price: {"FREE" if games[gid].price==0 else f"${games[gid].price:.2f}"}\n Genre: {games[gid].genre}\n Owned: {"Not Owned" if games[gid].owned==False else "Bought"}\n ID: {games[gid].id}\n Developer: {games[gid].developer}{f"\n*{games[gid].minfo}*" if games[gid].minfo is not None else ""}")
 
 def clear():
     os.system('cls')
 
 def procced():
-    print("Press any key to go back to main menu")
+    print("Press any key to return")
     m.getch()
 
 def ONOFF(setting):
@@ -93,35 +100,41 @@ assert ONOFF(testonoff)=="OFF"
 
 def buy_game():
     global moneyspent
-    cgtb=int(input("Enter the ID of the desired game to purchase: "))
+    try:
+        cgtb=int(input("Enter the ID of the desired game to purchase: "))
+    except ValueError:
+        print("Choose a valid Game ID")
+        t.sleep(wt)
+        return
+
     if cgtb >= len(games) or cgtb < 0:
         print("Choose a valid Game ID")
-        t.sleep(1.3)
+        t.sleep(wt)
         return
         
-    if games[cgtb]["Owned"]==True:
-        print(f"{games[cgtb]["Name"]} has already been purchased")
-        t.sleep(1.5)
+    if games[cgtb].owned==True:
+        print(f"{games[cgtb].name} has already been purchased")
+        t.sleep(wt)
         return
 
     else:
-        print(f"Purchase {games[cgtb]["Name"]} for {games[cgtb]["Price"]}?(y/N) ")
+        print(f"Purchase {games[cgtb].name} for {games[cgtb].price}?(y/N) ")
         buygame=m.getch().decode().lower()
         if buygame != "y":
-            print(f"Purchase of {games[cgtb]["Name"]} has been cancelled")
-            t.sleep(1)
-
+            print(f"Purchase of {games[cgtb].name} has been cancelled")
+            t.sleep(wt)
         else:
-            print(f"Purchasing {games[cgtb]["Name"]}...")
-            if games[cgtb]["Price"]=="FREE":
+            print(f"Purchasing {games[cgtb].name}...")
+            if games[cgtb].price==0:
                 t.sleep(0.5)
             else:
-                moneyspent=moneyspent+float(games[cgtb]["Price"].replace("$", " "))
+                moneyspent+=float(games[cgtb].price)
                 t.sleep(0.5)
-            games[cgtb]["Owned"]=True
-            library.append(games[cgtb]["Name"])
-            print(f"{games[cgtb]["Name"]} Purchased succesfully and Added to library")
-            t.sleep(1.5)
+            games[cgtb].owned=True
+            library.append(games[cgtb].name)
+            print(f"{games[cgtb].name} Purchased succesfully and Added to library")
+            t.sleep(wt)
+    
 
 #----------------------------------------------------------------------------------------------------------------------
 
@@ -159,8 +172,9 @@ while True:
     if choice == 0:
         for banana in range(len(games)):
             info(banana)
-            if p_loading==True:
-                t.sleep(0.2)
+            if loading==True:
+                t.sleep(loading_time)
+        print("\n")
         procced()
 
     elif choice == 1:
@@ -180,20 +194,26 @@ while True:
 
     elif choice == 4:
         while True:
-            settings_options = [
-                "Loading Pauses ------------ " + ONOFF(p_loading),
-                "Clear save",
-                "Reset Settings",
-                "Exit",
-                "About"
-            ]
+            settings_options = [{"name":"Loading Pauses ------------ " + ONOFF(loading), "id":0}]
+
+            if loading:
+                settings_options.append({"name":f"Customize loading time ---- {loading_time}", "id":1})
+
+            settings_options += [
+                {"name": "Divider -------------------- " + ONOFF(divider), "id":2},
+                {"name": "Clear save", "id":3},
+                {"name":"Reset Settings", "id":4},
+                {"name":"Exit", "id" :5},
+                {"name":"About", "id":6}
+                ]
+            
             clear()
             print("----------- SETTINGS -----------")
             for i in range(len(settings_options)):
                 if i==selected:
-                    print(">", settings_options[i])
+                    print(">", settings_options[i]["name"])
                 else:
-                    print(" ", settings_options[i])
+                    print(" ", settings_options[i]["name"])
 
             uc=m.getch()
             if uc==b'\r':
@@ -208,60 +228,74 @@ while True:
                         selected+=1
 
             if enter==True:
-                choice=selected
+                choice=settings_options[selected]["id"]
                 enter=False
                 selected=0
             else:
                 continue
 
             if choice==0:
-                p_loading=not p_loading
+                loading=not loading
                 save()
 
+    
             elif choice==1:
+                try:
+                    loading_time=float(input("Enter the new loading time (in seconds): "))
+                    save()
+                except ValueError:
+                    print("Choose a valid time")
+                    t.sleep(wt)
+
+            elif choice==2:
+                divider=not divider
+                save()
+
+            elif choice==3:
                 with open(file_path, "r") as file:
                     checkdata=json.load(file)
                     if checkdata==default_data:
                         print("Save is already empty")
-                        t.sleep(1.5)
+                        t.sleep(wt)
                     else:
                         print("Clear save? (y/N): ")
                         yn=m.getch().decode().lower()
                         if yn!="y":
                             print("Clearing save cancelled")
-                            t.sleep(1.5)
+                            t.sleep(wt)
                         else:
                             moneyspent=0
                             for i in range(len(library)):
                                 for game in games:
-                                    if game["Name"]==library[i]:
-                                        game["Owned"]=False
+                                    if game.name==library[i]:
+                                        game.owned=False
                             library=[]
                             with open(file_path, "w") as f1:
                                 json.dump(default_data, f1, indent=4)
                             print("Cleared save succesfully!")
-                            t.sleep(1.5)
-
-            elif choice==2:
-                p_loading=True
-                print("Reset settings succesfully")
-                save()
-
-            elif choice==3:
-                break
+                            t.sleep(wt)
 
             elif choice==4:
+                loading=True
+                divider=True
+                loading_time=0.2
+                print("Reset settings succesfully")
+                t.sleep(wt)
+                save()
+
+            elif choice==5:
+                break
+
+            elif choice==6:
                 clear()
                 print("------------ ABOUT ------------")
                 print("- Version: ",version)
                 print("- Developper: Stonyax97")
                 print("- More: https://github.com/Stonyax97/MiniGameStore")
-                print("- Requires Windows and Python 3.13 or later. (MacOS coming soon)")
+                print("- Requires Windows and Python 3.13 or later.")
                 print("\n\n\n- Licensed under no license ;-;\n")
-                print("Press any key to go back to settings")
+                print("Press any key to return")
                 m.getch()
-
-        save()
             
     elif choice == 5:
         break
