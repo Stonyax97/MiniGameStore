@@ -79,7 +79,7 @@ def info(gid):
     print(f"{"\n" if divider==False else "-"*40}\n> {games[gid].name}\n Price: {"FREE" if games[gid].price==0 else f"${games[gid].price:.2f}"}\n Genre: {games[gid].genre}\n Owned: {"Not Owned" if games[gid].owned==False else "Bought"}\n ID: {games[gid].id}\n Developer: {games[gid].developer}{f"\n*{games[gid].minfo}*" if games[gid].minfo is not None else ""}")
 
 def clear():
-    os.system('cls')
+    os.system("cls" if os.name == "nt" else "clear")
 
 def procced():
     input("Press Enter to return: ")
