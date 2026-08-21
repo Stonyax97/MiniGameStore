@@ -18,6 +18,10 @@ Some of the Python concepts I've practiced include:
 - JSON
 - Keyboard input with `msvcrt` (Windows only)
 - Organizing a project into multiple files
+- Classes (Learnt from v1.6)
+
+## Cross-Platfrom
+v1.6 is intended to come in 2 version. One with my actual terminal using msvcrt (which is windows only) and another one with which can be used everywhere. Including on your phone! (For future version i will give it to AI to change msvcrt to input as working on 2 versions is a lot)
 
 ## Version History
 
@@ -28,6 +32,5 @@ Each version represents a stage of my learning. This repo is for keeping records
 This project is mainly for learning and experimentation.
 It is not intended to be a serious game store or production application.
 More features and improvements will be added as I learn more Python.
-It just seemed super natural for me to add my new knowledge onto this project as I get new ideas.
 
-"Learn as you go" is what this project seems like to me.
+"Learn as you go" is what this project represents to me.
