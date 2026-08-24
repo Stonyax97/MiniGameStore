@@ -1,48 +1,46 @@
-#CHANGE LOGS ----------------------------------------------------------------------------------------------------------------------------------------------
+#CHANGE LOGS -----------
+version="1.8"
 
-version="1.7 Portable"
-#- Added a balance system and restore purchases!
-#- Added support for empty or corrupted JSON files.
-#- Added preserving cursor position option.
-#- Added a new Userspace! You can now see your balance, moneyspent (since the start of the session), money restored, games owned, and your library! All in one place!
-#- Various code improvements.
+#- Discarded the msvcrt windows version, later, curses will be implemented.
 
-#----------------------------------------------------------------------------------------------------------------------------------------------------------
+#- Transtitioning into a cleaner and better project strucuture
+#- Fixed a bug where purchase time stamps were saved when buying free games.
+#- Fixed a bug where purchase time stamps were not deleted after a succesful restore
+#- Removed preserve cursor from the main version (theres none)
+#- Improved user space
+
+#----------------------------------------------------
 
 import time as t
 import json
 import os
+
 from games import Game, games
 
-#VARIABLES ------------------------------------------------------------
+class User:
+    def __init__(self, library, balance, money_spent, money_restored):
+        self.library = library
+        self.balance = balance
+        self.money_spent = money_spent
+        self.money_restored = money_restored
 
-#VARIABLES ------------------------------------------------------------
 
-    #USER DATA --------
-library=[]
-moneyspent=0
-money_restored=0
-games_owned=0
-balance=100 #if u want more get a job
-
-wt=1.5 #this is the wait time when getting a text before it goes back to the menu
+#VARIABLES ------------------------------------------
 
     #SETTINGS VARIABLES --------
-loading_time=0.2 #Set to 0.2 by default
 loading=True #Set to true by default
-divider=True #Set to true by default
-preserve_cursor=True #Set to true by default (yo ik everything is set to true but hey all these features are lwk W)
-
-    #TEST DATA:
-testonoff=False
 
 file_path=os.path.join(os.path.dirname(__file__), "save.json") #now the fie will be created where this .py file is executed.
 
-default_data={"library":[], "moneyspent":0, "balance": 100, "money_restored": money_restored, "loading":True, "divider":True, "loading_time":loading_time, "preserve_cursor":True, "purchase_times":[]} #structure of the json file
+default_data={"library":[], 
+              "balance": 100, 
+              "money_restored": 0, 
+              "money_spent":0, 
+              "loading":True,  
+              "purchase_times":[]
+        } #structure of the json file
 
 main_options=["1-Games", "2-Buy a game", "3-Restore purchase", "4-User space", "5-Settings", "6-Exit"]
-
-#----------------------------------------------------------------------
 
 
 #FILE READING -------------------------------------------------
@@ -60,19 +58,13 @@ with open(file_path, "r") as file:
         print("File is corrupted... Formating file.")
         with open (file_path, "w") as file:
             json.dump(default_data, file, indent=4)
-        t.sleep(wt)
+        t.sleep(1.5)
 
     #UPDATING VARIABLES AND SETTINGS ----------
 with open(file_path, "r") as file:
     data=json.load(file)
-    library=data["library"]
-    moneyspent=data["moneyspent"]
+    user = User(data["library"], data["balance"], data["money_spent"], data["money_restored"])
     loading=data["loading"]
-    divider=data["divider"]
-    loading_time=data["loading_time"]
-    balance=data["balance"]
-    preserve_cursor=data["preserve_cursor"]
-    money_restored=data["money_restored"]
 
         #UPDATING GAMES.OWNED ---------
     for i in range(len(data['library'])): 
@@ -84,145 +76,156 @@ with open(file_path, "r") as file:
 
 def save(): #FILE SAVING ------
     with open(file_path, "r") as file:
-        data = json.load(file) #loading the file so that the other games.py can write and not get rewritten by this save func
+        data = json.load(file)
 
-    data["library"]=library
-    data["moneyspent"]=moneyspent
+    data["library"]=user.library
+    data["balance"]=user.balance
+    data["money_spent"]=user.money_spent
+    data["money_restored"]=user.money_restored
     data["loading"]=loading
-    data["divider"]=divider
-    data["loading_time"]=loading_time
-    data["balance"]=balance
-    data["preserve_cursor"]=preserve_cursor
-    data["money_restored"]=money_restored
     with open(file_path, "w") as file:
         json.dump(data, file, indent=4)
 
-def info(gid):
-    print(f"{"\n" if divider==False else "-"*40}\n> {games[gid].name}\n Price: {"FREE" if games[gid].price==0 else f"${games[gid].price:.2f}"}\n Genre: {games[gid].genre}\n Owned: {"Not Owned" if games[gid].owned==False else "Bought"}\n ID: {games[gid].id}\n Developer: {games[gid].developer}{f"\n*{games[gid].minfo}*" if games[gid].minfo is not None else ""}")
+def record_purchase(game):
+    game.purchase_time=t.time()
+    with open(file_path, "r") as file:
+        data=json.load(file)
+        data["purchase_times"].append({"name":game.name,"time_stamp":game.purchase_time})
+    with open(file_path, "w") as file:
+        json.dump(data, file, indent=4)
 
 def clear():
-    try:
-        os.system('cls')
-    except:
-        os.system('clear')
+    if hasattr(os, "system"):
+        os.system("cls" if os.name=="nt" else "clear")
+
+def wait():
+    t.sleep(1.5)
 
 def procced():
     input("Press Enter to return: ")
 
-def ONOFF(setting):
+def on_off(setting):
     if setting==True:
         return "ON"
     else:
         return "OFF"
 
-assert ONOFF(testonoff)=="OFF"
-
-#PURCHASES ----------------------------------------------------------------------------------------------------------
-
 def buy_game():
-    global moneyspent
-    global balance
     try:
-        cgtb=int(input("Enter the ID of the desired game to purchase: "))
+        game_id=int(input("Enter the ID of the desired game to purchase: "))
     except ValueError:
         print("Choose a valid Game ID")
-        t.sleep(wt)
+        wait()
         return
 
-    if cgtb >= len(games) or cgtb < 0:
+    if game_id >= len(games) or game_id < 0:
         print("Choose a valid Game ID")
-        t.sleep(wt)
+        wait()
         return
         
-    if games[cgtb].owned==True:
-        print(f"{games[cgtb].name} has already been purchased")
-        t.sleep(wt)
+    if games[game_id].owned==True:
+        print(f"{games[game_id].name} has already been purchased")
+        wait()
         return
 
-    if balance<games[cgtb].price:
+    if user.balance<games[game_id].price:
         print("Get a job to get more money")
-        t.sleep(wt)
+        wait()
         return
 
     else:
-        buygame=input(f"Purchase {games[cgtb].name} for {"FREE" if games[cgtb].price==0 else games[cgtb].price}?(y/N): ").lower()
+        buygame=input(f"Purchase {games[game_id].name} for {"FREE" if games[game_id].price==0 else games[game_id].price}?(y/N): ").lower()
         if buygame != "y":
-            print(f"Purchase of {games[cgtb].name} has been cancelled")
-            t.sleep(wt)
+            print(f"Purchase of {games[game_id].name} has been cancelled")
+            wait()
         else:
-            print(f"Purchasing {games[cgtb].name}...")
-            if games[cgtb].price==0:
+            print(f"Purchasing {games[game_id].name}...")
+            if games[game_id].price==0:
                 t.sleep(0.5)
             else:
-                moneyspent+=float(games[cgtb].price)
-                balance-=float(games[cgtb].price)
+                user.money_spent+=float(games[game_id].price)
+                user.balance-=float(games[game_id].price)
                 t.sleep(0.5)
-            games[cgtb].owned=True
-            library.append(games[cgtb].name)
-            games[cgtb].timer()
-            print(f"{games[cgtb].name} Purchased succesfully and Added to library")
-            t.sleep(wt)
+                record_purchase(games[game_id])
+            games[game_id].owned=True
+            user.library.append(games[game_id].name)
+            print(f"{games[game_id].name} Purchased succesfully and Added to library")
+            wait()
 
-def restore():
-    global moneyspent
-    global balance
-    global money_restored
+def restore_purchase():
     try:
-        cgtr=int(input("Enter the ID of the desired game to restore its purchase: "))
+        game_id=int(input("Enter the ID of the desired game to restore its purchase: "))
     except ValueError:
         print("Choose a valid Game ID")
-        t.sleep(wt)
+        wait()
         return
 
-    if cgtr >= len(games) or cgtr < 0:
+    if game_id >= len(games) or game_id < 0:
         print("Choose a valid Game ID")
-        t.sleep(wt)
+        wait()
         return
 
-    if games[cgtr].owned==False:
-        print(f"You do not own {games[cgtr].name}")
-        t.sleep(wt)
+    if games[game_id].owned==False:
+        print(f"You do not own {games[game_id].name}")
+        wait()
         return
-    
-    if games[cgtr].price==0:
+
+    if games[game_id].price==0:
         print("You cannot restore the purchase of a free game.")
-        t.sleep(wt)
+        wait()
         return
 
-    if balance>100:
+    if user.balance>100:
         print("yo bro why are u changing code")
-        t.sleep(wt)
+        wait()
         return
 
     with open(file_path, "r") as file:
         data=json.load(file)
     purchase_times=data["purchase_times"]
-    for i in range(len(purchase_times)):
-        for purchase_time in purchase_times:
-            if purchase_time["name"]==games[cgtr].name:
-                time_stamp=purchase_time["time_stamp"]
-                elapsed=t.time()-time_stamp
+    for purchase_time in purchase_times:
+        if purchase_time["name"] == games[game_id].name:
+            time_stamp=purchase_time["time_stamp"]
+            elapsed=t.time()-time_stamp
+            break
 
+    yn=input(f"Restore purchase of {games[game_id].name} and get {games[game_id].price/2 if elapsed>7200 else games[game_id].price}?(y/N): ")
+    refund=games[game_id].price / 2 if elapsed > 7200 else games[game_id].price
+
+    if yn != "y":
+        print(f"Restore purchase of {games[game_id].name} has been cancelled")
+        wait()
     else:
-        yn=input(f"Restore purchase of {games[cgtr].name} and get {games[cgtr].price/2 if elapsed>7200 else games[cgtr].price}?(y/N): ")
-        toaddinbalance=games[cgtr].price/2 if elapsed>7200 else games[cgtr].price
-        if yn != "y":
-            print(f"Restore purchase of {games[cgtr].name} has been cancelled")
-            t.sleep(wt)
-        else:
-            print(f"Restoring {games[cgtr].name}...")
-            balance+=float(toaddinbalance)
-            money_restored+=float(toaddinbalance)
-            games[cgtr].owned=False
-            library.remove(games[cgtr].name)
-            t.sleep(0.5)
-            print(f"Restored purchase of {games[cgtr].name}. ${toaddinbalance:.2f} added to your balance.")
-            t.sleep(wt+0.5)
+        print(f"Restoring {games[game_id].name}...")
 
-#----------------------------------------------------------------------------------------------------------------------
+        user.balance+=float(refund)
+        user.money_restored+=float(refund)
+        games[game_id].owned=False
+        user.library.remove(games[game_id].name)
 
+        for purchase_time in data["purchase_times"]: #why are we doing data and not just purchase times?
+            if purchase_time["name"] == games[game_id].name:
+                data["purchase_times"].remove(purchase_time)
+                break
 
-#MAIN LOOP ------------------------------------------------------------------------------------------------------------
+        with open(file_path, "w") as file:
+            json.dump(data, file, indent=4)
+
+        t.sleep(0.5)
+        print(f"Restored purchase of {games[game_id].name}. ${refund:.2f} added to your balance.")
+        t.sleep(2)
+
+def info(gid):
+    print("-"*40,
+          f"\n> {games[gid].name} - - - - - {"Not Owned" if games[gid].owned==False else "Owned"}"
+          f"\n Price: {"FREE" if games[gid].price==0 else f"${games[gid].price:.2f}"}"
+          f"\n Genre: {games[gid].genre}"
+          f"\n ID: {games[gid].id}"
+          f"\n Developer: {games[gid].developer}"
+          f"{f"\n*{games[gid].minfo}*" if games[gid].minfo is not None else ""}"
+        )
+
+#MAIN LOOP ------------------------------------------------
 
 while True:
     clear()
@@ -232,62 +235,53 @@ while True:
         choice=int(input("Choose an option: "))
     except ValueError:
         print("Choose a valid option")
-        t.sleep(wt)
+        wait()
         continue
     
     if choice == 1:
         for banana in range(len(games)):
             info(banana)
             if loading==True:
-                t.sleep(loading_time)
+                t.sleep(0.2)
         procced()
 
     elif choice == 2:
         buy_game()
 
     elif choice == 3:
-        restore()
+        restore_purchase()
 
     elif choice == 4:
-        games_owned=len(library)
+        clear()
+        games_owned=len(user.library)
         print("---------- USER SPACE ----------")
-        print(f"- Balance: ${balance:.2f}")
-        print(f"- Money spent: ${moneyspent:.2f}")
-        print(f"- Money restored: ${money_restored:.2f}")
-        print(f"- Games owned: {games_owned}")
-        print("\n- Library:")
-        if library==[]:
+        print(f"• Balance: ${user.balance:.2f}")
+        print(f"• Money spent: ${user.money_spent:.2f}")
+        print(f"• Money restored: ${user.money_restored:.2f}")
+        print(f"\n• Library             {games_owned}")
+        if user.library==[]:
             print("---------- Empty ----------")
         else:
-            for i in range(len(library)):
-                print(f" -{library[i]}")
+            for i in range(len(user.library)):
+                print(f" - {user.library[i]}")
         procced()
         
     elif choice == 5:
         while True:
-            settings_options = [{"name":"1-Loading Pauses ------------ " + ONOFF(loading), "id":0}]
-
-            if loading:
-                settings_options.append({"name":f"2-Customize loading time ---- {loading_time}", "id":1})
-
-            settings_options += [
-                {"name":"3-Preserve cursor position--- " + ONOFF(preserve_cursor), "id":2},
-                {"name":"4-Divider ------------------- " + ONOFF(divider), "id":3},
-                {"name":"5-Clear save", "id":4},
-                {"name":"6-Reset Settings", "id":5},
-                {"name":"7-Exit", "id" :6},
-                {"name":"8-About", "id":7}
-                ]
+            settings_options = ["1-Loading Pauses ------------ " + on_off(loading),
+                                "2-Clear save",
+                                "3-Exit", 
+                                "4-About"]
             
             clear()
             print("----------- SETTINGS -----------")
             for banana in range(len(settings_options)):
-                print(settings_options[banana]["name"])
+                print(settings_options[banana])
             try:
-                    choice=int(input("Choose an option: "))
+                choice=int(input("Choose an option: "))
             except:
                 print("Choose a valid option")
-                t.sleep(wt)
+                wait()
                 continue
 
             if choice==1:
@@ -295,62 +289,38 @@ while True:
                 save()
 
             elif choice==2:
-                try:
-                    loading_time=float(input("Enter the new loading time (in seconds): "))
-                    save()
-                except ValueError:
-                    print("Choose a valid time")
-                    t.sleep(wt)
-
-            elif choice==3:
-                preserve_cursor= not preserve_cursor
-                save()
-
-            elif choice==4:
-                divider=not divider
-                save()
-
-            elif choice==5:
                 with open(file_path, "r") as file:
                     checkdata=json.load(file)
                     if checkdata==default_data:
                         print("Save is already empty")
-                        t.sleep(wt)
+                        wait()
                     else:
-                        yn=input("Clear save? (y/N): ").lower()
+                        yn=input("Clear save?(y/N): ").lower()
                         if yn!="y":
                             print("Clearing save cancelled")
-                            t.sleep(wt)
+                            wait()
                         else:
-                            moneyspent=0
-                            balance=100
-                            for i in range(len(library)):
+                            user.balance=100
+                            user.money_restored=0
+                            user.money_spent=0
+                            for i in range(len(user.library)):
                                 for game in games:
-                                    if game.name==library[i]:
+                                    if game.name==user.library[i]:
                                         game.owned=False
-                            library=[]
+                            user.library=[]
                             with open(file_path, "w") as f1:
                                 json.dump(default_data, f1, indent=4)
                             print("Cleared save succesfully!")
-                            t.sleep(wt)
+                            wait()
 
-            elif choice==6:
-                loading=True
-                divider=True
-                loading_time=0.2
-                preserve_cursor=True
-                print("Reset settings succesfully")
-                t.sleep(wt)
-                save()
-
-            elif choice==7:
+            elif choice==3:
                 break
 
-            elif choice==8:
+            elif choice==4:
                 clear()
                 print("------------ ABOUT ------------")
                 print("- Version: ",version)
-                print("- Developper: Stonyax97")
+                print("- Developer: Stonyax97")
                 print("- More: https://github.com/Stonyax97/MiniGameStore")
                 print("- Requires Python 3.13 or later. ")
                 print("\n\n- Licensed under: MyImaginaryLicense3.0\n")
@@ -361,7 +331,7 @@ while True:
 
     else:
         print("Choose a valid option")
-        t.sleep(wt)
+        wait()
         continue
 
     save()
