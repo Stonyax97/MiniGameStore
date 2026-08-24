@@ -20,10 +20,9 @@ Some of the Python concepts I've practiced include:
 - Organizing a project into multiple files
 - Classes (Learnt from v1.6)
 
-## Cross-Platfrom
-v1.6 is intended to come in 2 version. One with my actual terminal using msvcrt (which is windows only) and another one with which can be used everywhere. Including on your phone! (For future version i will give it to AI to change msvcrt to input as working on 2 versions is a lot)
-
 ## Version History
+
+v1.8 is a cross platform version now, curses to be added later for a terminal like experience on windows, macos and linux!
 
 Each version represents a stage of my learning. This repo is for keeping records and seeing changes.
 
